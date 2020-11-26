@@ -16,7 +16,6 @@ namespace BlTools.MssqlFluentSqlWrapper
         private Func<FluentSqlCommand, bool> _onFailAction;
         private readonly bool _leaveConnectionOpened;
         private SqlParameter _returnValueParameter;
-        private bool _safe;
 
         #endregion
 
@@ -60,9 +59,9 @@ namespace BlTools.MssqlFluentSqlWrapper
             return this;
         }
 
-        public FluentSqlCommand WithTimeout(int commandTimeout)
+        public FluentSqlCommand WithTimeout(int commandTimeoutSeconds)
         {
-            _command.CommandTimeout = commandTimeout;
+            _command.CommandTimeout = commandTimeoutSeconds;
             return this;
         }
 
@@ -76,12 +75,6 @@ namespace BlTools.MssqlFluentSqlWrapper
         {
             _returnValueParameter = new SqlParameter("__returnValue", SqlDbType.Int) { Direction = ParameterDirection.ReturnValue };
             _parameters.Add(_returnValueParameter);
-            return this;
-        }
-
-        public FluentSqlCommand Safe()
-        {
-            _safe = true;
             return this;
         }
 
@@ -183,22 +176,14 @@ namespace BlTools.MssqlFluentSqlWrapper
         {
             var execResult = Exec(ExecType.Scalar);
             var result = execResult.ScalarResult;
-            if (DBNull.Value.Equals(result))
-            {
-                return default;
-            }
-            return (T)result;
+            return DBNull.Value.Equals(result) ? default : (T) result;
         }
 
         public async Task<T> ExecScalarAsync<T>()
         {
             var execResult = await ExecAsync(ExecType.Scalar);
             var result = execResult.ScalarResult;
-            if (DBNull.Value.Equals(result))
-            {
-                return default;
-            }
-            return (T)result;
+            return DBNull.Value.Equals(result) ? default : (T) result;
         }
 
         /// <summary>
@@ -233,21 +218,20 @@ namespace BlTools.MssqlFluentSqlWrapper
 
         public List<T> ExecReadItemList<T>(Func<SqlDataReader, T> itemBuilder)
         {
-            var res = new List<T>();
-            void ActionWrap(SqlDataReader reader, int resultNumber) => res.Add(itemBuilder(reader));
-
+            var result = new List<T>();
+            void ActionWrap(SqlDataReader reader, int resultNumber) => result.Add(itemBuilder(reader));
             _dataReaderAction = ActionWrap;
             Exec(ExecType.Reader);
-            return res;
+            return result;
         }
 
         public async Task<List<T>> ExecReadItemListAsync<T>(Func<SqlDataReader, T> itemBuilder)
         {
-            var res = new List<T>();
-            void ActionWrap(SqlDataReader reader, int resultNumber) => res.Add(itemBuilder(reader));
+            var result = new List<T>();
+            void ActionWrap(SqlDataReader reader, int resultNumber) => result.Add(itemBuilder(reader));
             _dataReaderAction = ActionWrap;
             await ExecAsync(ExecType.Reader);
-            return res;
+            return result;
         }
 
         public T ExecReadItem<T>(Func<SqlDataReader, T> itemBuilder)
@@ -270,14 +254,14 @@ namespace BlTools.MssqlFluentSqlWrapper
 
         public string ExecReadXml()
         {
-            var res = Exec(ExecType.XmlReader);
-            return res.XmlResult;
+            var result = Exec(ExecType.XmlReader);
+            return result.XmlResult;
         }
 
         public async Task<string> ExecReadXmlAsync()
         {
-            var res = await ExecAsync(ExecType.XmlReader);
-            return res.XmlResult;
+            var result = await ExecAsync(ExecType.XmlReader);
+            return result.XmlResult;
         }
 
         public DataSet ExecFillDataSet(DataSet dataSet)
@@ -314,20 +298,20 @@ namespace BlTools.MssqlFluentSqlWrapper
         {
             if (!_parameters.Contains(name))
             {
-                throw new InvalidOperationException("No parameter with name [" + name + "] found");
+                throw new InvalidOperationException($"No parameter with name [\"{name}\"] found");
             }
             var result = _parameters[name].Value;
             return (T)(result == DBNull.Value ? default : result);
         }
 
-        public T Result<T>()
+        public T GetResult<T>()
         {
             if (_returnValueParameter == null)
             {
                 throw new InvalidOperationException($"Can not get return value. Return value was not configured by {nameof(WithReturnValue)}");
             }
             var result = _returnValueParameter.Value;
-            return (T)(result == DBNull.Value ? null : result);
+            return (T)(result == DBNull.Value ? default : result);
         }
 
         #endregion
@@ -487,8 +471,8 @@ namespace BlTools.MssqlFluentSqlWrapper
         {
             Error = ex;
             Status = ExecStatus.Failed;
-            var handled = _onFailAction?.Invoke(this);
-            if (!handled.HasValue || !handled.Value || !_safe)
+            var wasHandled = _onFailAction?.Invoke(this) ?? false;
+            if (!wasHandled)
             {
                 throw ex;
             }

@@ -1,18 +1,17 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 namespace BlTools.MssqlFluentSqlWrapper.Tests
 {
     [TestFixture]
     public class DebugEntryPointTests
     {
-        private const string _cs = "";//TODO: place connection string here.
+        private const string _connectionString = "";//TODO: place connection string here.
 
         [Test]
-        public void Do()
+        public void RunTestCommandWithDataSetResult()
         {
             const string value = "123";
-            var res = new FluentSqlCommand(_cs)
+            var res = new FluentSqlCommand(_connectionString)
                 .Query($"select '{value}' as my")
                 .ExecFillDataSet();
 

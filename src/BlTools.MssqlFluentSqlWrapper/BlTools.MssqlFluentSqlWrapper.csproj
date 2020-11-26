@@ -3,7 +3,9 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
-
+  </PropertyGroup>
+  
+  <PropertyGroup>
     <Description>Provides fluent style wrapper around standard System.Data.SqlClient package for executing MS Sql Server commands</Description>
     <Authors>BlTools</Authors>
     <PackageReleaseNotes></PackageReleaseNotes>
