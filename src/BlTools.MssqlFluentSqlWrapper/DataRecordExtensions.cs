@@ -8,7 +8,8 @@ namespace BlTools.MssqlFluentSqlWrapper
     {
         public static object GetObject(this IDataRecord reader, string name)
         {
-            return reader.GetValue(reader.GetOrdinal(name));
+            var ordinal = reader.GetOrdinal(name);
+            return reader.IsDBNull(ordinal) ? null : reader.GetValue(ordinal);
         }
 
         public static string GetString(this IDataRecord reader, string name)
@@ -155,7 +156,8 @@ namespace BlTools.MssqlFluentSqlWrapper
             return reader.IsDBNull(ordinal) ? (float?)null : reader.GetFloat(ordinal);
         }
 
-        public static bool IsDËNull(this IDataRecord reader, string name)
+        // ReSharper disable once InconsistentNaming
+        public static bool IsDBNull(this IDataRecord reader, string name)
         {
             return reader.IsDBNull(reader.GetOrdinal(name));
         }
