@@ -1,6 +1,6 @@
 using System;
 using System.Data;
-using System.Data.SqlClient;
+
 
 namespace BlTools.MssqlFluentSqlWrapper
 {
@@ -18,10 +18,20 @@ namespace BlTools.MssqlFluentSqlWrapper
             return reader.IsDBNull(ordinal) ? null : reader.GetString(ordinal);
         }
 
-        public static byte[] GetBytes(this SqlDataReader reader, string name)
+        public static byte[] GetBytes(this IDataRecord record, string name)
         {
-            var ordinal = reader.GetOrdinal(name);
-            return reader.IsDBNull(ordinal) ? null : reader.GetSqlBytes(ordinal).Value;
+            var ordinal = record.GetOrdinal(name);
+
+            byte[] result = null;
+
+            if (!record.IsDBNull(ordinal))
+            {
+                var arraySize = record.GetBytes(ordinal, 0, null, 0, 0);
+                result = new byte[arraySize];
+                record.GetBytes(ordinal, 0, result, 0, result.Length);
+            }
+
+            return result;
         }
 
         public static long GetInt64(this IDataRecord reader, string name)
