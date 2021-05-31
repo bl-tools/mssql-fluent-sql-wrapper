@@ -43,4 +43,5 @@ jobs:
           # NUGET_SOURCE: https://api.nuget.org
 
           # Flag to toggle pushing symbols along with nuget package to the server, disabled by default
-          INCLUDE_SYMBOLS: true
+          # Have to set to false due to issue https://github.com/brandedoutcast/publish-nuget/issues/58
+          INCLUDE_SYMBOLS: false
