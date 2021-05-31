@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - master # Default release branch
+      - add-action-publish-nuget
 jobs:
   publish:
     name: build, pack & publish
