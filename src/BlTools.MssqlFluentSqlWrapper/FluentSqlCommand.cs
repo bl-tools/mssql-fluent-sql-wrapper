@@ -12,7 +12,7 @@ namespace BlTools.MssqlFluentSqlWrapper
 
         private readonly SqlCommand _command;
         private readonly SqlParameterCollection _parameters;
-        private Action<SqlDataReader, int> _dataReaderAction;
+        private Action<IDataRecord, int> _dataReaderAction;
         private Func<FluentSqlCommand, bool> _onFailAction;
         private readonly bool _leaveConnectionOpened;
         private SqlParameter _returnValueParameter;
@@ -190,63 +190,63 @@ namespace BlTools.MssqlFluentSqlWrapper
         /// Execute reader and call action for every read. Provides reader result number as action parameter.
         /// </summary>
         /// <param name="action">Action to be called for every read.</param>
-        public void ExecReader(Action<SqlDataReader, int> action)
+        public void ExecReader(Action<IDataRecord, int> action)
         {
             _dataReaderAction = action;
             Exec(ExecType.Reader);
         }
 
-        public async Task ExecReaderAsync(Action<SqlDataReader, int> action)
+        public async Task ExecReaderAsync(Action<IDataRecord, int> action)
         {
             _dataReaderAction = action;
             await ExecAsync(ExecType.Reader);
         }
 
-        public void ExecReader(Action<SqlDataReader> action)
+        public void ExecReader(Action<IDataRecord> action)
         {
-            void ActionWrap(SqlDataReader reader, int resultNumber) => action(reader);
+            void ActionWrap(IDataRecord reader, int resultNumber) => action(reader);
             _dataReaderAction = ActionWrap;
             Exec(ExecType.Reader);
         }
 
-        public async Task ExecReaderAsync(Action<SqlDataReader> action)
+        public async Task ExecReaderAsync(Action<IDataRecord> action)
         {
-            void ActionWrap(SqlDataReader reader, int resultNumber) => action(reader);
+            void ActionWrap(IDataRecord reader, int resultNumber) => action(reader);
             _dataReaderAction = ActionWrap;
             await ExecAsync(ExecType.Reader);
         }
 
-        public List<T> ExecReadItemList<T>(Func<SqlDataReader, T> itemBuilder)
+        public List<T> ExecReadItemList<T>(Func<IDataRecord, T> itemBuilder)
         {
             var result = new List<T>();
-            void ActionWrap(SqlDataReader reader, int resultNumber) => result.Add(itemBuilder(reader));
+            void ActionWrap(IDataRecord reader, int resultNumber) => result.Add(itemBuilder(reader));
             _dataReaderAction = ActionWrap;
             Exec(ExecType.Reader);
             return result;
         }
 
-        public async Task<List<T>> ExecReadItemListAsync<T>(Func<SqlDataReader, T> itemBuilder)
+        public async Task<List<T>> ExecReadItemListAsync<T>(Func<IDataRecord, T> itemBuilder)
         {
             var result = new List<T>();
-            void ActionWrap(SqlDataReader reader, int resultNumber) => result.Add(itemBuilder(reader));
+            void ActionWrap(IDataRecord reader, int resultNumber) => result.Add(itemBuilder(reader));
             _dataReaderAction = ActionWrap;
             await ExecAsync(ExecType.Reader);
             return result;
         }
 
-        public T ExecReadItem<T>(Func<SqlDataReader, T> itemBuilder)
+        public T ExecReadItem<T>(Func<IDataRecord, T> itemBuilder)
         {
             var result = default(T);
-            void ActionWrap(SqlDataReader reader, int resultNumber) => result = itemBuilder(reader);
+            void ActionWrap(IDataRecord reader, int resultNumber) => result = itemBuilder(reader);
             _dataReaderAction = ActionWrap;
             Exec(ExecType.Reader);
             return result;
         }
 
-        public async Task<T> ExecReadItemAsync<T>(Func<SqlDataReader, T> itemBuilder)
+        public async Task<T> ExecReadItemAsync<T>(Func<IDataRecord, T> itemBuilder)
         {
             var result = default(T);
-            void ActionWrap(SqlDataReader reader, int resultNumber) => result = itemBuilder(reader);
+            void ActionWrap(IDataRecord reader, int resultNumber) => result = itemBuilder(reader);
             _dataReaderAction = ActionWrap;
             await ExecAsync(ExecType.Reader);
             return result;
